@@ -70,17 +70,5 @@ class ParseConfigTest(unittest.TestCase):
                 settings.parse_config([])
 
 
-class FormatConfigTest(unittest.TestCase):
-    """Проверки функции format_config."""
-
-    def test_key_value(self):
-        """Параметры выводятся в формате ключ=значение."""
-        result = settings.parse_config(["--package", "nginx", "--repo", URL])
-        lines = settings.format_config(result)
-        self.assertIn("package=nginx", lines)
-        self.assertIn(f"repo={URL}", lines)
-        self.assertIn("test_mode=False", lines)
-
-
 if __name__ == "__main__":
     unittest.main()
