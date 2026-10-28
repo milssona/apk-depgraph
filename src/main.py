@@ -3,25 +3,27 @@
 import sys
 
 from config import ConfigError, parse_config
+from graph import build_graph
 from repository import RepositoryError, find_package, load_packages
 
 ERROR_EXIT_CODE = 1
 
 
-def print_dependencies(package):
-    """Вывести все прямые зависимости пакета."""
-    if not package.depends:
-        print(f"У пакета {package.name} нет прямых зависимостей")
+def print_graph(root, graph):
+    """Вывести граф: в каждой строке пакет и его прямые зависимости."""
+    if not graph:
+        print(f"Пакет {root} исключён фильтром, граф пуст")
         return
-    print(f"Прямые зависимости пакета {package.name}:")
-    for dependency in package.depends:
-        print(f"  {dependency}")
+    for name, dependencies in graph.items():
+        print(f"{name}: {' '.join(dependencies)}".rstrip())
 
 
 def run(config):
-    """Загрузить репозиторий и вывести зависимости заданного пакета."""
+    """Загрузить репозиторий, построить и вывести граф зависимостей."""
     packages = load_packages(config.repo, config.test_mode)
-    print_dependencies(find_package(packages, config.package))
+    find_package(packages, config.package)
+    graph = build_graph(config.package, packages, config.substring)
+    print_graph(config.package, graph)
 
 
 def main(argv=None):
