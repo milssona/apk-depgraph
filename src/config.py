@@ -2,7 +2,7 @@
 
 import argparse
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from os.path import isfile
 from urllib.parse import urlparse
 
@@ -94,8 +94,3 @@ def parse_config(argv=None):
         ascii_tree=args.ascii_tree,
         substring=args.substring,
     )
-
-
-def format_config(config):
-    """Вернуть строки «ключ=значение» для всех параметров."""
-    return [f"{key}={value}" for key, value in asdict(config).items()]
