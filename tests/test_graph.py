@@ -72,5 +72,38 @@ class ResolveTest(unittest.TestCase):
         self.assertEqual(graph.build_graph("A", packages)["A"], ["B"])
 
 
+class LoadOrderTest(unittest.TestCase):
+    """Порядок загрузки: зависимости раньше зависящих от них пакетов."""
+
+    def order(self, text, root="A", substring=""):
+        """Построить граф и вернуть порядок загрузки корня."""
+        packages = make_packages(text)
+        result = graph.build_graph(root, packages, substring)
+        return graph.load_order(root, result)
+
+    def test_chain(self):
+        """Цепочка загружается от конца к началу."""
+        self.assertEqual(self.order("A: B\nB: C\nC:\n"), ["C", "B", "A"])
+
+    def test_diamond(self):
+        """Общая зависимость загружается один раз и до обоих пакетов."""
+        text = "A: B C\nB: D\nC: D\nD:\n"
+        self.assertEqual(self.order(text), ["D", "B", "C", "A"])
+
+    def test_cycle(self):
+        """Цикл не зацикливает вывод, каждый пакет встречается один раз."""
+        result = self.order("A: B\nB: C\nC: A\n")
+        self.assertEqual(result, ["C", "B", "A"])
+
+    def test_filter(self):
+        """Отфильтрованные пакеты в порядок загрузки не попадают."""
+        text = "A: B C\nB: D\nC:\nD:\n"
+        self.assertEqual(self.order(text, substring="B"), ["C", "A"])
+
+    def test_root_filtered(self):
+        """Если корень отфильтрован, порядок пуст."""
+        self.assertEqual(self.order("A:\n", substring="A"), [])
+
+
 if __name__ == "__main__":
     unittest.main()
