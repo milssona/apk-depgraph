@@ -5,17 +5,20 @@ import sys
 from config import ConfigError, parse_config
 from graph import build_graph, load_order
 from repository import RepositoryError, find_package, load_packages
+from visualize import ascii_tree, mermaid_text
 
 ERROR_EXIT_CODE = 1
 
 
-def print_graph(root, graph):
-    """Вывести граф: в каждой строке пакет и его прямые зависимости."""
+def print_graph(root, graph, show_tree):
+    """Вывести граф на языке Mermaid и, если нужно, ASCII-дерево."""
     if not graph:
         print(f"Пакет {root} исключён фильтром, граф пуст")
         return
-    for name, dependencies in graph.items():
-        print(f"{name}: {' '.join(dependencies)}".rstrip())
+    print(mermaid_text(graph))
+    if show_tree:
+        print()
+        print(ascii_tree(root, graph))
 
 
 def print_order(root, graph):
@@ -33,7 +36,7 @@ def run(config):
     if config.load_order:
         print_order(config.package, graph)
     else:
-        print_graph(config.package, graph)
+        print_graph(config.package, graph, config.ascii_tree)
 
 
 def main(argv=None):
