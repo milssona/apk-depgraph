@@ -60,3 +60,20 @@ def build_graph(root, packages, substring=""):
     context = (packages, build_provides(packages), substring)
     visit(root, context, graph)
     return graph
+
+
+def visit_order(name, graph, seen, order):
+    """Рекурсивный DFS: добавить зависимости пакета, затем сам пакет."""
+    seen.add(name)
+    for dependency in graph[name]:
+        if dependency not in seen:
+            visit_order(dependency, graph, seen, order)
+    order.append(name)
+
+
+def load_order(root, graph):
+    """Вернуть порядок загрузки: зависимости идут раньше пакетов."""
+    order = []
+    if root in graph:
+        visit_order(root, graph, set(), order)
+    return order

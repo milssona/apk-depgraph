@@ -24,6 +24,7 @@ class Config:
     test_mode: bool
     ascii_tree: bool
     substring: str
+    load_order: bool
 
 
 def build_parser():
@@ -48,6 +49,11 @@ def build_parser():
         "--ascii-tree",
         action="store_true",
         help="выводить зависимости в виде ASCII-дерева",
+    )
+    parser.add_argument(
+        "--load-order",
+        action="store_true",
+        help="вывести порядок загрузки зависимостей",
     )
     parser.add_argument(
         "--filter",
@@ -93,4 +99,5 @@ def parse_config(argv=None):
         test_mode=args.test_mode,
         ascii_tree=args.ascii_tree,
         substring=args.substring,
+        load_order=args.load_order,
     )
