@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from os.path import isfile
 from urllib.parse import urlparse
 
+from plantuml import DEFAULT_SERVER
+
 PACKAGE_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
 SPACE_PATTERN = re.compile(r"\s")
 URL_SCHEMES = ("http", "https")
@@ -25,13 +27,13 @@ class Config:
     ascii_tree: bool
     substring: str
     load_order: bool
+    plantuml: bool
+    image: str
+    server: str
 
 
-def build_parser():
-    """Создать разборщик параметров командной строки."""
-    parser = argparse.ArgumentParser(
-        description="Граф зависимостей пакета Alpine Linux"
-    )
+def add_input_options(parser):
+    """Добавить параметры: пакет, репозиторий, режим и фильтр."""
     parser.add_argument(
         "--package", required=True, help="имя анализируемого пакета"
     )
@@ -46,6 +48,16 @@ def build_parser():
         help="работать с тестовым репозиторием",
     )
     parser.add_argument(
+        "--filter",
+        default="",
+        dest="substring",
+        help="подстрока для фильтрации пакетов",
+    )
+
+
+def add_output_options(parser):
+    """Добавить параметры вывода: дерево, порядок, PlantUML, картинка."""
+    parser.add_argument(
         "--ascii-tree",
         action="store_true",
         help="выводить зависимости в виде ASCII-дерева",
@@ -56,11 +68,31 @@ def build_parser():
         help="вывести порядок загрузки зависимостей",
     )
     parser.add_argument(
-        "--filter",
-        default="",
-        dest="substring",
-        help="подстрока для фильтрации пакетов",
+        "--plantuml",
+        action="store_true",
+        help="выводить граф на языке PlantUML вместо Mermaid",
     )
+    parser.add_argument(
+        "--image",
+        default="",
+        metavar="ФАЙЛ",
+        help="получить картинку графа от сервера PlantUML и сохранить в ФАЙЛ",
+    )
+    parser.add_argument(
+        "--plantuml-server",
+        default=DEFAULT_SERVER,
+        dest="server",
+        help="адрес сервера PlantUML (по умолчанию %(default)s)",
+    )
+
+
+def build_parser():
+    """Создать разборщик параметров командной строки."""
+    parser = argparse.ArgumentParser(
+        description="Граф зависимостей пакета Alpine Linux"
+    )
+    add_input_options(parser)
+    add_output_options(parser)
     return parser
 
 
@@ -87,12 +119,20 @@ def check_substring(text):
         raise ConfigError(f"подстрока не должна содержать пробелов: {text!r}")
 
 
+def check_server(server):
+    """Проверить адрес сервера PlantUML."""
+    parts = urlparse(server)
+    if parts.scheme not in URL_SCHEMES or not parts.netloc:
+        raise ConfigError(f"некорректный адрес сервера PlantUML: {server}")
+
+
 def parse_config(argv=None):
     """Разобрать и проверить параметры. Вернуть объект Config."""
     args = build_parser().parse_args(argv)
     check_package(args.package)
     check_repo(args.repo, args.test_mode)
     check_substring(args.substring)
+    check_server(args.server)
     return Config(
         package=args.package,
         repo=args.repo,
@@ -100,4 +140,7 @@ def parse_config(argv=None):
         ascii_tree=args.ascii_tree,
         substring=args.substring,
         load_order=args.load_order,
+        plantuml=args.plantuml,
+        image=args.image,
+        server=args.server,
     )

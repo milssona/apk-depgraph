@@ -9,6 +9,7 @@ import unittest
 import context
 
 settings = context.load("config")
+plantuml = context.load("plantuml")
 
 URL = "https://dl-cdn.alpinelinux.org/alpine/v3.20/main/x86_64"
 
@@ -29,6 +30,25 @@ class ParseConfigTest(unittest.TestCase):
         self.assertFalse(result.test_mode)
         self.assertFalse(result.ascii_tree)
         self.assertEqual(result.substring, "")
+        self.assertFalse(result.plantuml)
+        self.assertEqual(result.image, "")
+        self.assertEqual(result.server, plantuml.DEFAULT_SERVER)
+
+    def test_image_options(self):
+        """Параметры PlantUML принимаются."""
+        result = settings.parse_config(
+            ["--package", "nginx", "--repo", URL, "--plantuml",
+             "--image", "g.png", "--plantuml-server", "http://localhost:8080"]
+        )
+        self.assertTrue(result.plantuml)
+        self.assertEqual(result.image, "g.png")
+        self.assertEqual(result.server, "http://localhost:8080")
+
+    def test_bad_server(self):
+        """Некорректный адрес сервера PlantUML отвергается."""
+        self.assert_rejected(
+            ["--package", "a", "--repo", URL, "--plantuml-server", "host"]
+        )
 
     def test_test_mode(self):
         """Тестовый режим: путь к существующему файлу принимается."""

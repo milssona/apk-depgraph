@@ -10,6 +10,7 @@ INDEX_NAME = "APKINDEX"
 INDEX_ARCHIVE = "APKINDEX.tar.gz"
 TIMEOUT_SECONDS = 30
 ENCODING = "utf-8"
+USER_AGENT = "apk-depgraph/1.0"
 
 
 class RepositoryError(Exception):
@@ -33,9 +34,10 @@ def index_url(repo):
 
 def download(url):
     """Скачать файл по URL и вернуть его содержимое в виде байтов."""
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
-        with urllib.request.urlopen(url, timeout=TIMEOUT_SECONDS) as response:
-            return response.read()
+        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as page:
+            return page.read()
     except OSError as error:
         message = f"не удалось получить {url}: {error}"
         raise RepositoryError(message) from error
